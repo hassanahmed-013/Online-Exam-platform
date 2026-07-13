@@ -1,3 +1,4 @@
+"use server";
 // Loads live questions for the runner from Supabase. Prefer the service-role
 // client when available; fall back to the anon read client (RLS allows public
 // question reads). Never returns mock/seed questions.
