@@ -49,8 +49,8 @@ export function QuestionRunner({
   sectionName?: string;
 }) {
   const router = useRouter();
-  // Practice: instant correct/wrong + explanation. Timed/mock: hide until submit.
-  const showImmediateFeedback = mode === "practice";
+  // Practice + mock: instant correct/wrong + explanation. Timed: hide until submit.
+  const showImmediateFeedback = mode === "practice" || mode === "mock";
   const durationSeconds = durationMinutes ? durationMinutes * 60 : undefined;
   const isCountdown = mode === "timed" || mode === "mock";
 
@@ -209,7 +209,8 @@ export function QuestionRunner({
   const answeredCount = Object.keys(answers).length;
 
   const selectOption = (optionId: string) => {
-    if (showImmediateFeedback && answers[current.id]) return;
+    // Once answered, the choice is locked — no going back to change it.
+    if (answers[current.id]) return;
     const next = { ...answers, [current.id]: optionId };
     setAnswers(next);
     persist({ answers: next });
@@ -359,16 +360,17 @@ export function QuestionRunner({
             const selected = answers[current.id] === opt.id;
             const showState = isRevealed;
             const isCorrect = opt.is_correct;
+            const locked = !!answers[current.id];
 
             return (
               <button
                 key={opt.id}
                 type="button"
                 onClick={() => selectOption(opt.id)}
-                disabled={isRevealed}
+                disabled={locked}
                 className={cn(
                   "flex w-full items-center gap-3 rounded-xl border p-4 text-left text-sm transition-all",
-                  "hover:border-primary/50 hover:bg-accent/40",
+                  !locked && "hover:border-primary/50 hover:bg-accent/40",
                   selected &&
                     !showState &&
                     "border-primary bg-primary/5 ring-1 ring-primary",
@@ -377,7 +379,7 @@ export function QuestionRunner({
                     selected &&
                     !isCorrect &&
                     "border-destructive bg-destructive/10",
-                  isRevealed && "cursor-default"
+                  locked && "cursor-default"
                 )}
               >
                 <span

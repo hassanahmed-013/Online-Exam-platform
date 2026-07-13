@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -42,12 +42,27 @@ export function StartSessionPanel({
   initialSectionId?: string;
 }) {
   const router = useRouter();
+  const panelRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<Set<string>>(
     () => new Set(initialSectionId ? [initialSectionId] : [])
   );
   const [mode, setMode] = useState<Mode>("practice");
   const [count, setCount] = useState<number | null>(null);
   const [pending, startTransition] = useTransition();
+
+  // Practice cards link here with ?section=…#start-session. Soft navigation
+  // on the same page does not remount this panel, so sync selection + scroll.
+  useEffect(() => {
+    if (!initialSectionId) return;
+    setSelected(new Set([initialSectionId]));
+    setCount(null);
+    setMode("practice");
+    // Defer so layout is ready after the query-param update.
+    const t = window.setTimeout(() => {
+      panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+    return () => window.clearTimeout(t);
+  }, [initialSectionId]);
 
   const allSelected = selected.size === categories.length && categories.length > 0;
 
@@ -104,8 +119,9 @@ export function StartSessionPanel({
 
   return (
     <div
+      ref={panelRef}
       id="start-session"
-      className="overflow-hidden rounded-[1.35rem] border border-border/70 bg-card shadow-sm"
+      className="overflow-hidden rounded-[1.35rem] border border-border/70 bg-card shadow-sm scroll-mt-6"
     >
       <div className="border-b border-border/60 bg-gradient-to-r from-primary/[0.08] to-transparent px-6 py-5">
         <h3 className="font-heading text-xl font-semibold tracking-tight">
