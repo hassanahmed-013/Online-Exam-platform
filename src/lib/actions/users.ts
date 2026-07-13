@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/admin-auth";
+import { activatePaidPlan, deactivatePaidPlan } from "@/lib/billing";
 
 export interface UserActionResult {
   ok: boolean;
@@ -27,31 +27,13 @@ export async function grantAccess(
   if (!userId) return { ok: false, error: "Missing user id." };
 
   try {
-    const sb = createAdminClient();
-    const ends = planEndsAt(plan);
-
-    // Cancel any currently-active rows so "latest" stays unambiguous.
-    await sb
-      .from("subscriptions")
-      .update({ status: "cancelled" })
-      .eq("user_id", userId)
-      .eq("status", "active");
-
-    const { error } = await sb.from("subscriptions").insert({
-      user_id: userId,
+    const res = await activatePaidPlan({
+      userId,
       plan,
-      status: "active",
-      starts_at: new Date().toISOString(),
-      ends_at: ends,
+      endsAt: planEndsAt(plan),
+      paymentRef: "admin_grant",
     });
-    if (error) return { ok: false, error: error.message };
-
-    const { error: pErr } = await sb
-      .from("profiles")
-      .update({ current_plan: plan, plan_expires_at: ends })
-      .eq("id", userId);
-    if (pErr) return { ok: false, error: pErr.message };
-
+    if (!res.ok) return res;
     revalidatePath("/admin/users");
     revalidatePath("/admin/subscriptions");
     return { ok: true };
@@ -67,20 +49,8 @@ export async function revokeAccess(userId: string): Promise<UserActionResult> {
   if (!userId) return { ok: false, error: "Missing user id." };
 
   try {
-    const sb = createAdminClient();
-    const { error } = await sb
-      .from("subscriptions")
-      .update({ status: "cancelled" })
-      .eq("user_id", userId)
-      .eq("status", "active");
-    if (error) return { ok: false, error: error.message };
-
-    const { error: pErr } = await sb
-      .from("profiles")
-      .update({ current_plan: "free", plan_expires_at: null })
-      .eq("id", userId);
-    if (pErr) return { ok: false, error: pErr.message };
-
+    const res = await deactivatePaidPlan(userId);
+    if (!res.ok) return res;
     revalidatePath("/admin/users");
     revalidatePath("/admin/subscriptions");
     return { ok: true };

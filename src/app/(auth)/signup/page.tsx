@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/auth/auth-form";
+import { getCurrentUser } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Sign up" };
 
-export default function SignupPage() {
+export default async function SignupPage() {
+  if (await getCurrentUser()) redirect("/dashboard");
+
   return (
     <div>
       <div className="mb-6 space-y-1">

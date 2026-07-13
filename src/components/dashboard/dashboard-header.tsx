@@ -35,10 +35,10 @@ export function DashboardHeader({
     "Dashboard";
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border/60 bg-background/75 px-4 backdrop-blur-xl">
       <SidebarTrigger className="-ml-1" />
       <Separator orientation="vertical" className="mr-1 h-4" />
-      <h1 className="font-heading text-sm font-medium">{title}</h1>
+      <h1 className="font-heading text-base font-medium tracking-tight">{title}</h1>
       <div className="ml-auto flex items-center gap-2">
         <UserMenu name={name} email={email} avatarUrl={avatarUrl} />
       </div>

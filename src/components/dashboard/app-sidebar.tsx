@@ -65,9 +65,9 @@ export function AppSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
     ));
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border">
-        <div className="flex h-10 items-center px-2 group-data-[collapsible=icon]:justify-center">
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border/80">
+      <SidebarHeader className="border-b border-sidebar-border bg-gradient-to-b from-primary/[0.06] to-transparent">
+        <div className="flex h-12 items-center px-2 group-data-[collapsible=icon]:justify-center">
           <Logo />
         </div>
       </SidebarHeader>

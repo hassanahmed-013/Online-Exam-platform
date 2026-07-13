@@ -19,7 +19,9 @@ export default async function DashboardLayout({
           email={user?.email}
           avatarUrl={user?.avatar_url}
         />
-        <div className="flex-1 p-4 sm:p-6">{children}</div>
+        <div className="flex-1 bg-[radial-gradient(ellipse_at_top,_oklch(0.95_0.03_183)_0%,_transparent_55%)] p-4 sm:p-6">
+          {children}
+        </div>
       </SidebarInset>
     </SidebarProvider>
   );

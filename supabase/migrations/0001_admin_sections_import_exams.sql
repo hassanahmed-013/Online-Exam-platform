@@ -43,6 +43,8 @@ alter table questions
 alter table questions alter column difficulty set default 'medium';
 
 -- Idempotency guards for re-uploading the same CSV.
+-- Note: global external_id uniqueness is replaced in 0006/0007 with
+-- (section_id, external_id) so the same CSV ids can exist in Biology + MRCP.
 create unique index if not exists questions_external_id_uidx
   on questions (external_id) where external_id is not null;
 create unique index if not exists questions_content_hash_uidx

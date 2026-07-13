@@ -5,13 +5,12 @@ export function LogoMark({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm",
+        "inline-flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-teal-700 text-primary-foreground shadow-md shadow-primary/25",
         className
       )}
       aria-hidden
     >
       <svg viewBox="0 0 24 24" className="size-5" fill="none">
-        {/* medical cross + pulse */}
         <path
           d="M4 13h3l2-4 3 8 2-5h6"
           stroke="currentColor"
@@ -36,11 +35,11 @@ export function Logo({
   return (
     <Link
       href={href}
-      className={cn("inline-flex items-center gap-2 font-heading", className)}
+      className={cn("inline-flex items-center gap-2.5 font-heading", className)}
     >
       <LogoMark />
       {showText && (
-        <span className="text-lg font-semibold tracking-tight">
+        <span className="text-xl font-semibold tracking-tight">
           Med<span className="text-primary">Prep</span>
         </span>
       )}

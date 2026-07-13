@@ -1,6 +1,6 @@
 -- =============================================================
 -- Migration 0006 — Scope external_id uniqueness per section
--- Safe to re-run.
+-- Safe to re-run. Re-asserted again in 0007 for alignment.
 -- =============================================================
 
 -- Global unique external_id blocked the same CSV ids across Biology / MRCP.

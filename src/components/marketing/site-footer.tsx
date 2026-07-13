@@ -5,7 +5,7 @@ const columns = [
   {
     title: "Platform",
     links: [
-      { href: "/#exams", label: "Question bank" },
+      { href: "/#subjects", label: "Question bank" },
       { href: "/dashboard/mock-exams", label: "Mock exams" },
       { href: "/dashboard/performance", label: "Performance" },
       { href: "/#pricing", label: "Pricing" },
@@ -32,24 +32,24 @@ const columns = [
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border/60 bg-muted/30">
-      <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.5fr_repeat(3,1fr)]">
-        <div className="space-y-3">
+    <footer className="border-t border-border/60 bg-gradient-to-b from-muted/40 to-muted/70">
+      <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.6fr_repeat(3,1fr)]">
+        <div className="space-y-4">
           <Logo />
-          <p className="max-w-xs text-sm text-muted-foreground">
-            The smarter way to prepare for the MDCAT — thousands of MCQs, timed
-            mocks and analytics that find your weak spots.
+          <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
+            Focused MDCAT prep — live question banks, timed mocks, and analytics
+            that show where to improve next.
           </p>
         </div>
         {columns.map((col) => (
           <div key={col.title} className="space-y-3">
-            <h3 className="text-sm font-semibold">{col.title}</h3>
-            <ul className="space-y-2">
+            <h3 className="font-heading text-sm font-semibold">{col.title}</h3>
+            <ul className="space-y-2.5">
               {col.links.map((l) => (
                 <li key={l.label}>
                   <Link
                     href={l.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    className="text-sm text-muted-foreground transition-colors hover:text-primary"
                   >
                     {l.label}
                   </Link>
@@ -59,10 +59,10 @@ export function SiteFooter() {
           </div>
         ))}
       </div>
-      <div className="border-t border-border/60">
+      <div className="border-t border-border/50">
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6">
           <p>© {new Date().getFullYear()} MedPrep. All rights reserved.</p>
-          <p>Built with Next.js, Supabase &amp; shadcn/ui.</p>
+          <p>Built for serious MDCAT preparation.</p>
         </div>
       </div>
     </footer>

@@ -33,16 +33,21 @@ export function ExamLengthPicker({ exam }: { exam: ExamConfig }) {
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
           <CardTitle>{exam.name}</CardTitle>
-          {exam.time_limit_minutes != null && (
-            <span className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Clock className="size-3.5" />
-              {exam.time_limit_minutes}m
-            </span>
-          )}
         </div>
-        <Badge variant="secondary" className="w-fit">
-          {exam.section_name ?? "All sections"}
-        </Badge>
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="secondary" className="w-fit">
+            {exam.section_name ?? "All sections"}
+          </Badge>
+          <Badge
+            variant="outline"
+            className="w-fit gap-1 font-normal"
+          >
+            <Clock className="size-3.5" />
+            {exam.time_limit_minutes != null
+              ? `${exam.time_limit_minutes} min timer`
+              : "Untimed"}
+          </Badge>
+        </div>
       </CardHeader>
       <CardContent>
         <p className="mb-3 text-sm text-muted-foreground">

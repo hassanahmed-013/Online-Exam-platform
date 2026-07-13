@@ -3,7 +3,6 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -104,11 +103,20 @@ export function StartSessionPanel({
   };
 
   return (
-    <Card id="start-session">
-      <CardHeader>
-        <CardTitle>Build your session</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-5">
+    <div
+      id="start-session"
+      className="overflow-hidden rounded-[1.35rem] border border-border/70 bg-card shadow-sm"
+    >
+      <div className="border-b border-border/60 bg-gradient-to-r from-primary/[0.08] to-transparent px-6 py-5">
+        <h3 className="font-heading text-xl font-semibold tracking-tight">
+          Build your session
+        </h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Pick a mode, sections, and length — then start.
+        </p>
+      </div>
+
+      <div className="space-y-5 p-6">
         <div className="grid grid-cols-2 gap-3">
           {(
             [
@@ -121,15 +129,15 @@ export function StartSessionPanel({
               type="button"
               onClick={() => setMode(m.key)}
               className={cn(
-                "flex items-start gap-3 rounded-xl border p-3 text-left transition-all",
+                "flex items-start gap-3 rounded-2xl border p-4 text-left transition-all duration-200",
                 mode === m.key
-                  ? "border-primary bg-primary/5 ring-1 ring-primary"
+                  ? "border-primary bg-primary/[0.07] shadow-md shadow-primary/10 ring-1 ring-primary"
                   : "hover:border-primary/40 hover:bg-accent/40"
               )}
             >
               <span
                 className={cn(
-                  "inline-flex size-8 items-center justify-center rounded-lg",
+                  "inline-flex size-10 items-center justify-center rounded-xl",
                   mode === m.key
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted"
@@ -138,18 +146,16 @@ export function StartSessionPanel({
                 <m.icon className="size-4" />
               </span>
               <span>
-                <span className="block text-sm font-medium">{m.label}</span>
-                <span className="block text-xs text-muted-foreground">
-                  {m.desc}
-                </span>
+                <span className="block text-sm font-semibold">{m.label}</span>
+                <span className="block text-xs text-muted-foreground">{m.desc}</span>
               </span>
             </button>
           ))}
         </div>
 
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <label
-            className="flex cursor-pointer items-center gap-3 rounded-lg border border-dashed p-3"
+            className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-primary/25 bg-primary/[0.03] p-3.5"
             onClick={(e) => {
               e.preventDefault();
               toggleAll();
@@ -169,9 +175,9 @@ export function StartSessionPanel({
               <label
                 key={c.id}
                 className={cn(
-                  "flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors",
+                  "flex cursor-pointer items-center gap-3 rounded-xl border p-3.5 transition-colors",
                   isChecked
-                    ? "border-primary/40 bg-primary/5"
+                    ? "border-primary/45 bg-primary/[0.06]"
                     : "hover:bg-accent/40"
                 )}
                 onClick={(e) => {
@@ -183,11 +189,11 @@ export function StartSessionPanel({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <span className="truncate text-sm font-medium">{c.name}</span>
-                    <span className="shrink-0 text-xs text-muted-foreground">
-                      {c.attempted} of {c.total}
+                    <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                      {c.attempted} of {c.total.toLocaleString()}
                     </span>
                   </div>
-                  <Progress value={attemptedPct} className="mt-1.5 h-1" />
+                  <Progress value={attemptedPct} className="mt-2 h-1.5" />
                 </div>
               </label>
             );
@@ -195,8 +201,8 @@ export function StartSessionPanel({
         </div>
 
         {selected.size > 0 && (
-          <div className="space-y-2">
-            <p className="text-sm font-medium">How many questions?</p>
+          <div className="space-y-3 rounded-2xl bg-muted/40 p-4">
+            <p className="text-sm font-semibold">How many questions?</p>
             <p className="text-xs text-muted-foreground">
               Lengths come from the admin exam config for this scope
               {selectedTotal > 0
@@ -210,7 +216,10 @@ export function StartSessionPanel({
                   key={n}
                   type="button"
                   variant={count === n ? "default" : "outline"}
-                  className="min-w-16"
+                  className={cn(
+                    "min-w-16",
+                    count === n && "shadow-md shadow-primary/20"
+                  )}
                   onClick={() => setCount(n)}
                   disabled={pending}
                 >
@@ -221,7 +230,7 @@ export function StartSessionPanel({
           </div>
         )}
 
-        <div className="flex items-center justify-between gap-3 border-t pt-4">
+        <div className="flex flex-col gap-3 border-t border-border/60 pt-5 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">
             {selected.size === 0
               ? "Select at least one section."
@@ -232,14 +241,14 @@ export function StartSessionPanel({
           <Button
             onClick={start}
             disabled={selected.size === 0 || count == null || pending}
-            className="h-10 gap-1.5"
+            className="h-11 gap-1.5 px-6 shadow-md shadow-primary/20"
           >
             {pending && <Loader2 className="size-4 animate-spin" />}
             Start the questions
             <ArrowRight className="size-4" />
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

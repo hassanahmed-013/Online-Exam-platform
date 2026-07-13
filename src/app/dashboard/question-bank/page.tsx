@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { StartSessionPanel } from "@/components/dashboard/start-session-panel";
@@ -8,7 +7,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getActiveExams } from "@/lib/exams";
 import { getSections, sectionAsCategory } from "@/lib/sections";
 import { cn } from "@/lib/utils";
-import { Upload } from "lucide-react";
+import { ArrowRight, Upload } from "lucide-react";
 
 export const metadata = { title: "Question bank" };
 
@@ -34,35 +33,39 @@ export default async function QuestionBankPage({
       : "/admin/bulk-import";
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 p-6 ring-1 ring-primary/10">
+    <div className="mx-auto max-w-6xl space-y-8">
+      <div className="relative overflow-hidden rounded-[1.5rem] border border-primary/15 bg-gradient-to-br from-primary/[0.14] via-card to-emerald-500/[0.06] p-7 shadow-sm sm:p-9">
+        <div
+          className="pointer-events-none absolute -right-8 top-0 size-40 rounded-full bg-primary/10 blur-2xl"
+          aria-hidden
+        />
         {totalQuestions > 0 ? (
           <>
-            <h2 className="font-heading text-xl font-semibold sm:text-2xl">
+            <h2 className="relative font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
               <span className="text-primary">{totalQuestions.toLocaleString()}</span>{" "}
               live questions across{" "}
               <span className="text-primary">{sections.length}</span> sections.
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="relative mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">
               Pick your sections, choose a length, then start a fresh session from
               the real inventory.
             </p>
           </>
         ) : isAdmin ? (
           <>
-            <h2 className="font-heading text-xl font-semibold sm:text-2xl">
+            <h2 className="relative font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
               No questions in the bank yet
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="relative mt-2 text-sm text-muted-foreground">
               {sections.length === 0
                 ? "Create a section first, then import a CSV into it."
                 : "Import a CSV to populate your sections with questions."}
             </p>
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="relative mt-5 flex flex-wrap gap-2">
               {sections.length === 0 ? (
                 <Link
                   href="/admin/sections"
-                  className={cn(buttonVariants({ size: "lg" }), "h-10")}
+                  className={cn(buttonVariants({ size: "lg" }), "h-11")}
                 >
                   Create sections
                 </Link>
@@ -74,7 +77,7 @@ export default async function QuestionBankPage({
                     size: "lg",
                     variant: sections.length === 0 ? "outline" : "default",
                   }),
-                  "h-10 gap-1.5"
+                  "h-11 gap-1.5"
                 )}
               >
                 <Upload className="size-4" />
@@ -84,10 +87,10 @@ export default async function QuestionBankPage({
           </>
         ) : (
           <>
-            <h2 className="font-heading text-xl font-semibold sm:text-2xl">
+            <h2 className="relative font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
               No questions available yet
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="relative mt-2 text-sm text-muted-foreground">
               This bank doesn&apos;t have questions yet — check back soon.
             </p>
           </>
@@ -95,13 +98,16 @@ export default async function QuestionBankPage({
       </div>
 
       <div>
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="font-heading text-lg font-medium">Browse by section</h3>
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="font-heading text-xl font-semibold tracking-tight">
+            Browse by section
+          </h3>
           <Link
             href="/categories"
-            className="text-sm font-medium text-primary hover:underline"
+            className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
           >
             View all
+            <ArrowRight className="size-3.5" />
           </Link>
         </div>
         {subjects.length === 0 ? (
@@ -122,7 +128,7 @@ export default async function QuestionBankPage({
             )}
           </p>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {subjects.map((subject) => {
               const empty = subject.total === 0;
               const href =
@@ -143,39 +149,39 @@ export default async function QuestionBankPage({
         )}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_18rem]">
         <StartSessionPanel
           categories={subjects}
           exams={exams}
           initialSectionId={initialSectionId}
         />
 
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle>Configurable exams</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Prefer a named exam with its own lengths and timer? Start one from
-              the exams page.
-            </p>
-            <Link
-              href="/dashboard/exams"
-              className="text-sm font-medium text-primary hover:underline"
-            >
-              Open exams →
-            </Link>
-            <div className="rounded-lg border p-3">
-              <div className="mb-1 flex items-center gap-2">
-                <Badge variant="outline">Live</Badge>
-                <span className="text-xs text-muted-foreground">Supabase</span>
-              </div>
-              <div className="text-sm font-medium">
-                {sections.length} section{sections.length === 1 ? "" : "s"} ready
-              </div>
+        <aside className="h-fit space-y-4 rounded-[1.35rem] border border-border/70 bg-card p-6 shadow-sm">
+          <h3 className="font-heading text-lg font-semibold">Configurable exams</h3>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Prefer a named exam with its own lengths and timer? Start one from the
+            exams page.
+          </p>
+          <Link
+            href="/dashboard/exams"
+            className={cn(
+              buttonVariants({ variant: "outline", size: "lg" }),
+              "h-10 w-full gap-1.5"
+            )}
+          >
+            Open exams
+            <ArrowRight className="size-4" />
+          </Link>
+          <div className="rounded-xl border border-border/60 bg-muted/30 p-4">
+            <div className="mb-2 flex items-center gap-2">
+              <Badge variant="outline">Live</Badge>
+              <span className="text-xs text-muted-foreground">Supabase</span>
             </div>
-          </CardContent>
-        </Card>
+            <div className="text-sm font-medium">
+              {sections.length} section{sections.length === 1 ? "" : "s"} ready
+            </div>
+          </div>
+        </aside>
       </div>
     </div>
   );

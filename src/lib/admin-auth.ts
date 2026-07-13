@@ -62,4 +62,4 @@ export async function userHasActiveAccess(
 }
 
 export const PAYWALL_ERROR =
-  "An active subscription is required to start this session. Ask an admin to grant access, or upgrade your plan.";
+  "An active subscription is required. Upgrade on the pricing page, or ask an admin to grant access.";

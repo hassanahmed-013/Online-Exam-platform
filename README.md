@@ -42,20 +42,15 @@ Open the printed URL (defaults to http://localhost:3000).
 
 - `src/proxy.ts` gates `/dashboard`, `/admin`, `/exam` (sign-in required; admin role for `/admin`).
 - Admin mutations and CSV import require an **admin** profile (not just the service-role key).
-- Starting bank / exam / mock sessions requires an **active subscription** (admins bypass). Grant plans from Admin → Users.
+- Starting bank / exam / mock sessions requires an **active subscription** (admins bypass). Students pay via **Stripe Checkout** on the pricing section; admins can still grant plans from Admin → Users.
 
 ## Connecting Supabase
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. Run [`supabase/schema.sql`](supabase/schema.sql), then migrations in order
-   (`0001` … `0006_section_scoped_external_id.sql`).
-3. Copy `.env.local.example` to `.env.local`:
-
-   ```env
-   NEXT_PUBLIC_SUPABASE_URL=...
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-   SUPABASE_SERVICE_ROLE_KEY=...
-   ```
+2. Apply the database:
+   - **Fresh project:** run [`supabase/schema.sql`](supabase/schema.sql) (canonical).
+   - **Existing project:** run migrations in order under `supabase/migrations/` (`0001` … `0008_stripe_billing.sql`). All are idempotent.
+3. Copy `.env.local.example` to `.env.local` and fill Supabase + Stripe keys (see below).
 
 4. Promote your user to admin in SQL:
 
@@ -63,7 +58,31 @@ Open the printed URL (defaults to http://localhost:3000).
    update profiles set role = 'admin' where id = '<your-user-uuid>';
    ```
 
-5. Grant yourself a plan from Admin → Users (or SQL) so student session starts work.
+## Stripe billing
+
+1. In [Stripe Dashboard](https://dashboard.stripe.com) create two **recurring** products/prices (e.g. Monthly Rs 1,500 and Annual Rs 9,000).
+2. Put the Price IDs and secret key in `.env.local`:
+
+   ```env
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
+   STRIPE_SECRET_KEY=sk_test_...
+   STRIPE_PRICE_MONTHLY=price_...
+   STRIPE_PRICE_ANNUAL=price_...
+   STRIPE_WEBHOOK_SECRET=whsec_...
+   ```
+
+3. Forward webhooks locally:
+
+   ```bash
+   stripe listen --forward-to localhost:3000/api/stripe/webhook
+   ```
+
+   Use the printed `whsec_…` as `STRIPE_WEBHOOK_SECRET`. In production, add an endpoint for `https://your-domain/api/stripe/webhook` listening for:
+   `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`.
+
+4. Run migration `0008_stripe_billing.sql` so `profiles.stripe_customer_id` exists.
+
+5. As a **student** (not admin), open `/#pricing` → **Go monthly** / **Go annual** → Stripe Checkout. On success, access is activated via the webhook.
 
 ## Project structure
 

@@ -16,17 +16,18 @@ export default function AuthLayout({
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       {/* Brand panel */}
-      <div className="relative hidden overflow-hidden bg-primary p-10 text-primary-foreground lg:flex lg:flex-col lg:justify-between">
-        <div className="absolute inset-0 opacity-10 [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:22px_22px]" />
+      <div className="relative hidden overflow-hidden bg-gradient-to-br from-primary via-teal-700 to-teal-900 p-10 text-primary-foreground lg:flex lg:flex-col lg:justify-between">
+        <div className="absolute inset-0 opacity-[0.12] [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:22px_22px]" />
+        <div className="absolute -right-16 top-24 size-72 rounded-full bg-white/10 blur-3xl" aria-hidden />
         <Logo href="/" className="relative text-primary-foreground [&_span]:text-primary-foreground" />
         <div className="relative space-y-6">
-          <h2 className="max-w-sm font-heading text-3xl font-semibold leading-tight">
+          <h2 className="max-w-sm font-heading text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
             The smarter way to prepare for the MDCAT.
           </h2>
           <ul className="space-y-3">
             {highlights.map((h) => (
               <li key={h.text} className="flex items-center gap-3">
-                <span className="inline-flex size-9 items-center justify-center rounded-lg bg-white/15">
+                <span className="inline-flex size-10 items-center justify-center rounded-xl bg-white/15">
                   <h.icon className="size-5" />
                 </span>
                 <span className="text-sm text-primary-foreground/90">{h.text}</span>
