@@ -5,14 +5,6 @@
 import { createReadClient, isSupabaseConfigured } from "./supabase/read";
 import type { Category, Section } from "./types";
 
-function tallyBySection(rows: { section_id: string | null }[]) {
-  const counts: Record<string, number> = {};
-  for (const r of rows) {
-    if (r.section_id) counts[r.section_id] = (counts[r.section_id] ?? 0) + 1;
-  }
-  return counts;
-}
-
 /** Map a live section into the Category shape used by existing cards/panels. */
 export function sectionAsCategory(s: Section): Category {
   return {
@@ -32,17 +24,27 @@ export async function getSections(): Promise<Section[]> {
   if (!isSupabaseConfigured) return [];
   try {
     const sb = createReadClient();
-    const [{ data: sections, error }, { data: qs }] = await Promise.all([
-      sb
-        .from("sections")
-        .select("*")
-        .eq("is_active", true)
-        .order("created_at", { ascending: true }),
-      sb.from("questions").select("section_id").eq("is_active", true),
-    ]);
+    const { data: sections, error } = await sb
+      .from("sections")
+      .select("*")
+      .eq("is_active", true)
+      .order("created_at", { ascending: true });
     if (error) return [];
-    const counts = tallyBySection((qs ?? []) as { section_id: string | null }[]);
-    return ((sections ?? []) as Section[]).map((s) => ({
+    const list = (sections ?? []) as Section[];
+    // Exact per-section counts — a single unbounded select is capped by
+    // PostgREST (~1000 rows) and under-counts once the bank grows past that.
+    const counted = await Promise.all(
+      list.map(async (s) => {
+        const { count } = await sb
+          .from("questions")
+          .select("id", { count: "exact", head: true })
+          .eq("section_id", s.id)
+          .eq("is_active", true);
+        return [s.id, count ?? 0] as const;
+      })
+    );
+    const counts = Object.fromEntries(counted);
+    return list.map((s) => ({
       ...s,
       question_count: counts[s.id] ?? 0,
     }));
