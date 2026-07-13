@@ -41,13 +41,20 @@ create table if not exists exams (
 );
 
 -- ---------- Categories ----------
+-- Admin-defined, free-form hierarchy: parent_id null = a top-level subject,
+-- otherwise a sub-topic nested under one. Each carries its own card content.
 create table if not exists categories (
   id uuid primary key default gen_random_uuid(),
   exam_id uuid references exams(id) on delete cascade,
   parent_id uuid references categories(id) on delete set null,
+  slug text not null,
   name text not null,
+  short_description text,
+  cover_image_url text,               -- category-images bucket URL (or data URI)
   sort_order int not null default 0
 );
+create unique index if not exists categories_exam_slug_idx
+  on categories (exam_id, slug);
 
 -- ---------- Questions ----------
 create table if not exists questions (
@@ -56,7 +63,13 @@ create table if not exists questions (
   category_id uuid references categories(id) on delete set null,
   stem text not null,
   explanation text,
-  difficulty text,           -- 'easy' | 'medium' | 'hard'
+  difficulty text default 'medium',  -- effective: 'easy' | 'medium' | 'hard'
+  difficulty_override text,          -- admin-forced value; null = use computed
+  correct_rate numeric,              -- cached correct-answer rate (0-1)
+  attempts_sample_size int not null default 0, -- attempts the rate is based on
+  image_url text,                    -- question-images bucket URL (or data URI)
+  image_source text,                 -- 'manual_upload' | 'bulk_import'
+  original_source_url text,          -- provenance for bulk-imported images
   is_demo boolean not null default false,
   is_active boolean not null default true,
   created_by uuid references profiles(id),
@@ -211,3 +224,92 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- =============================================================
+-- Storage buckets (question images + category covers + textbooks)
+-- =============================================================
+-- Public read so students/visitors can view images; writes are admin-only.
+insert into storage.buckets (id, name, public)
+values ('question-images', 'question-images', true),
+       ('category-images', 'category-images', true),
+       ('textbooks', 'textbooks', true)
+on conflict (id) do nothing;
+
+-- Public read for media buckets.
+drop policy if exists "media_public_read" on storage.objects;
+create policy "media_public_read" on storage.objects
+  for select using (bucket_id in ('question-images', 'category-images', 'textbooks'));
+
+-- Admin-only insert/update/delete for media buckets.
+drop policy if exists "media_admin_write" on storage.objects;
+create policy "media_admin_write" on storage.objects
+  for all
+  using (bucket_id in ('question-images', 'category-images', 'textbooks') and public.is_admin())
+  with check (bucket_id in ('question-images', 'category-images', 'textbooks') and public.is_admin());
+
+-- =============================================================
+-- Textbooks / study documents
+-- =============================================================
+create table if not exists textbooks (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  description text not null default '',
+  tag text not null default 'High-yield',
+  file_url text not null,
+  file_name text not null,
+  file_type text not null default 'application/pdf',
+  file_size int not null default 0,
+  is_active boolean not null default true,
+  sort_order int not null default 0,
+  created_at timestamptz not null default now()
+);
+
+alter table textbooks enable row level security;
+
+drop policy if exists "textbooks_public_read" on textbooks;
+create policy "textbooks_public_read" on textbooks
+  for select using (is_active or public.is_admin());
+
+drop policy if exists "textbooks_admin_write" on textbooks;
+create policy "textbooks_admin_write" on textbooks
+  for all using (public.is_admin()) with check (public.is_admin());
+
+-- =============================================================
+-- Automatic difficulty classification
+-- =============================================================
+-- Recompute each question's correct-answer rate from attempt_answers and bucket
+-- it into easy/medium/hard. Precedence: admin override → computed value (once a
+-- question has enough attempts) → whatever difficulty is already stored. Keep
+-- the thresholds in sync with src/lib/difficulty.ts.
+create or replace function public.recalculate_question_difficulty()
+returns void language sql as $$
+  update questions q
+  set
+    attempts_sample_size = sub.total,
+    correct_rate = sub.correct::numeric / sub.total,
+    difficulty = case
+      when q.difficulty_override is not null then q.difficulty_override
+      when sub.total < 20 then coalesce(q.difficulty, 'medium')  -- min sample
+      when sub.correct::numeric / sub.total >= 0.75 then 'easy'
+      when sub.correct::numeric / sub.total >= 0.40 then 'medium'
+      else 'hard'
+    end
+  from (
+    select question_id,
+           count(*) as total,
+           count(*) filter (where is_correct) as correct
+    from attempt_answers
+    group by question_id
+  ) sub
+  where q.id = sub.question_id;
+$$;
+
+-- Schedule it nightly at 02:00 UTC. Requires the pg_cron extension (enable it
+-- under Database → Extensions in the Supabase dashboard). Alternatively invoke
+-- recalculate_question_difficulty() from a scheduled Edge Function.
+-- create extension if not exists pg_cron;
+-- select cron.schedule(
+--   'nightly-difficulty-recalc',
+--   '0 2 * * *',
+--   $$ select public.recalculate_question_difficulty(); $$
+-- );

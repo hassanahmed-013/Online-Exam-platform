@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MedPrep — MDCAT Prep Platform
 
-## Getting Started
+A subscription-style MDCAT exam-preparation platform (modelled on PassMedicine):
+practise MCQs by subject, sit timed mock exams, review past attempts, and track
+performance. Built with **Next.js (App Router) · TypeScript · Tailwind v4 ·
+shadcn/ui · Framer Motion · Recharts · Supabase**.
 
-First, run the development server:
+> **Production path:** configure Supabase (URL, anon key, **service role key**)
+> and run the SQL migrations under `supabase/migrations/`. Without env vars,
+> marketing pages still render; dashboard / exam / admin routes expect a live
+> backend.
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open the printed URL (defaults to http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## What's built
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Area | Route | Notes |
+|---|---|---|
+| Landing page | `/` | Hero, subject cards, features, pricing |
+| Subjects | `/categories` | Live sections from Supabase |
+| Category demo | `/categories/[slug]/demo` | Guest demo (tracks `demo_sessions`) |
+| Auth | `/login`, `/signup`, `/reset-password` | Supabase auth (+ optional demo cookie) |
+| Dashboard | `/dashboard/*` | Bank, timed, mocks, **live** Review & Performance |
+| Runner | `/exam/run` | Practice (instant feedback) · Timed/Mock (feedback after submit) |
+| Results | `/exam/results` | Score + review; PDF from server-scored data when possible |
+| Admin | `/admin/*` | Sections, exams, questions, bulk import, users, subscriptions, analytics |
 
-## Learn More
+### Runner modes
 
-To learn more about Next.js, take a look at the following resources:
+- **Practice** — untimed, instant correct/wrong + explanation.
+- **Timed / Mock** — countdown, answers hidden until Submit; mock blocked on mobile.
+- On submit, answers are written to `attempt_answers` and the attempt is marked completed (also kept in `sessionStorage` for reload).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Access control
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `src/proxy.ts` gates `/dashboard`, `/admin`, `/exam` (sign-in required; admin role for `/admin`).
+- Admin mutations and CSV import require an **admin** profile (not just the service-role key).
+- Starting bank / exam / mock sessions requires an **active subscription** (admins bypass). Grant plans from Admin → Users.
 
-## Deploy on Vercel
+## Connecting Supabase
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Create a project at [supabase.com](https://supabase.com).
+2. Run [`supabase/schema.sql`](supabase/schema.sql), then migrations in order
+   (`0001` … `0006_section_scoped_external_id.sql`).
+3. Copy `.env.local.example` to `.env.local`:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=...
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+   SUPABASE_SERVICE_ROLE_KEY=...
+   ```
+
+4. Promote your user to admin in SQL:
+
+   ```sql
+   update profiles set role = 'admin' where id = '<your-user-uuid>';
+   ```
+
+5. Grant yourself a plan from Admin → Users (or SQL) so student session starts work.
+
+## Project structure
+
+```
+src/
+  app/                 routes (auth, dashboard, admin, exam, demo)
+  components/          ui, marketing, dashboard, admin, runner
+  lib/
+    actions/           server actions (attempts, exams, import helpers, …)
+    admin-data.ts      admin reads
+    student-analytics.ts  live Review / Performance
+    session-store.ts   client save/resume + results summary
+    proxy.ts           Next.js 16 route protection
+supabase/
+  schema.sql
+  migrations/
+```
+
+## Scripts
+
+```bash
+npm run dev     # dev server
+npm run build   # production build
+npm run start   # serve the build
+npm run lint    # eslint
+```
